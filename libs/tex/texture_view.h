@@ -56,6 +56,8 @@ class TextureView {
         /** Returns the id of the TexureView which is consistent for every run. */
         std::size_t get_id(void) const;
 
+        // std::vector<math::Vec2f> texcoord_original;
+
         /** Returns the 2D pixel coordinates of the given vertex projected into the view. */
         math::Vec2f get_pixel_coords(math::Vec3f const & vertex) const;
         /** Returns the RGB pixel values [0, 1] for the given vertex projected into the view, calculated by linear interpolation. */

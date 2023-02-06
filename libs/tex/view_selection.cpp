@@ -128,6 +128,7 @@ view_selection(DataCosts const & data_costs, UniGraph * graph, Settings const &)
         }
         if (label == 0) undefined += 1;
         graph->set_label(i, static_cast<std::size_t>(label));
+        // std::cout << graph->get_label(i) << "\n";
     }
     std::cout << '\t' << undefined << " faces have not been seen" << std::endl;
 }

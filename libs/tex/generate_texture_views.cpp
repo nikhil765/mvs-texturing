@@ -109,11 +109,15 @@ from_images_and_camera_files(std::string const & path,
     }
 
     ProgressCounter view_counter("\tLoading", files.size() / 2);
+    // std::cout << "YEEEEEEEEET" << "\n";
+
     #pragma omp parallel for
     for (std::size_t i = 0; i < files.size(); i += 2) {
         view_counter.progress<SIMPLE>();
         const std::string cam_file = files[i];
         const std::string img_file = files[i + 1];
+
+        std::cerr << img_file << std::endl;
 
         /* Read CAM file. */
         std::ifstream infile(cam_file.c_str(), std::ios::binary);

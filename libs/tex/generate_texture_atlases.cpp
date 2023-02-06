@@ -120,6 +120,11 @@ generate_texture_atlases(std::vector<TexturePatch::Ptr> * orig_texture_patches,
     {
     #pragma omp single
     {
+    std::cout << "--------------------" << "\n";
+
+    std::ofstream outfile("/home/ubuntu/test.txt");
+
+    std::set<int> used_labels; 
 
     while (!texture_patches.empty()) {
         unsigned int texture_size = calculate_texture_size(texture_patches);
@@ -131,6 +136,7 @@ generate_texture_atlases(std::vector<TexturePatch::Ptr> * orig_texture_patches,
         std::list<TexturePatch::ConstPtr>::iterator it = texture_patches.begin();
         for (; it != texture_patches.end();) {
             std::size_t done_patches = total_num_patches - remaining_patches;
+            
             int precent = static_cast<float>(done_patches)
                 / total_num_patches * 100.0f;
             if (total_num_patches > 100
@@ -139,6 +145,26 @@ generate_texture_atlases(std::vector<TexturePatch::Ptr> * orig_texture_patches,
                 tty << "\r\tWorking on atlas " << texture_atlases->size() << " "
                  << precent << "%... " << std::flush;
             }
+            auto patch = *it; 
+
+            // auto im = patch->get_image();
+            // auto im_data = im->get_data();
+            // im_data.
+
+            auto data = *it; 
+
+            // outfile << patch->get_label() << "," << data->min_x << "," << data->max_x << "," << data->min_y << "," << data->max_y << "\n";
+
+            auto tex_coords = patch->texcoord_original;
+            for (auto tex_coord: tex_coords)
+            {
+                auto x_val = tex_coord[0];
+                auto y_val = tex_coord[1];
+
+                outfile << patch->get_label() << "," << x_val << "," << y_val << "\n";
+            }
+
+            used_labels.insert(patch->get_label());
 
             if (texture_atlas->insert(*it)) {
                 it = texture_patches.erase(it);
@@ -151,6 +177,9 @@ generate_texture_atlases(std::vector<TexturePatch::Ptr> * orig_texture_patches,
         #pragma omp task
         texture_atlas->finalize();
     }
+
+    // for (auto val: used_labels)
+        // std::cout << val << "\n";
 
     std::cout << "\r\tWorking on atlas " << texture_atlases->size()
         << " 100%... done." << std::endl;

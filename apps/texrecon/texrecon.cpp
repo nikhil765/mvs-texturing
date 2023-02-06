@@ -94,6 +94,8 @@ int main(int argc, char **argv) {
         std::cout << "View selection:" << std::endl;
         util::WallTimer rwtimer;
 
+        std::cout << "Selecting views..." << "\n";
+
         tex::DataCosts data_costs(num_faces, texture_views.size());
         if (conf.data_cost_file.empty()) {
             tex::calculate_data_costs(mesh, &texture_views, conf.settings, &data_costs);
@@ -237,6 +239,8 @@ int main(int argc, char **argv) {
     /* Remove temporary files. */
     for (util::fs::File const & file : util::fs::Directory(tmp_dir)) {
         util::fs::unlink(util::fs::join_path(file.path, file.name).c_str());
+
+        // std::cout << "YEET THAT SHIT " << "\n";
     }
     util::fs::rmdir(tmp_dir.c_str());
 

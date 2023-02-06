@@ -14,6 +14,7 @@
 #include <mve/image_tools.h>
 #include <Eigen/SparseCore>
 #include <Eigen/SparseLU>
+#include <mve/image_io.h>
 
 #include "texturing.h"
 
@@ -69,11 +70,15 @@ void merge_vertex_projection_infos(std::vector<std::vector<VertexProjectionInfo>
 struct TexturePatchCandidate {
     Rect<int> bounding_box;
     TexturePatch::Ptr texture_patch;
+    std::vector<math::Vec2f> texcoord_original;
+    // std::vector<math::Vec2f> pixel_coords; 
 };
 
 /** Create a TexturePatchCandidate by calculating the faces' bounding box
  * projected into the view,
  *  relative texture coordinates and extacting the texture views relevant part
+ * Basically, this function projects all the vertices of the curent face of the mesh into the current texture view 
+ * It then draws a bounding box based on the area covered in the image 
  */
 TexturePatchCandidate
 generate_candidate(int label, TextureView const & texture_view,
@@ -102,6 +107,7 @@ generate_candidate(int label, TextureView const & texture_view,
         }
     }
 
+
     /* Check for valid projections/erroneous labeling files. */
     assert(min_x >= 0);
     assert(min_y >= 0);
@@ -117,6 +123,9 @@ generate_candidate(int label, TextureView const & texture_view,
     min_x -= texture_patch_border;
     min_y -= texture_patch_border;
 
+    auto tex_coord_originalzzzzz = texcoords;
+    // texture_view.texcoord_original = tex_coord_originalzzzzz; 
+
     /* Calculate the relative texcoords. */
     math::Vec2f min(min_x, min_y);
     for (std::size_t i = 0; i < texcoords.size(); ++i) {
@@ -124,8 +133,18 @@ generate_candidate(int label, TextureView const & texture_view,
     }
 
     mve::ByteImage::Ptr byte_image;
+
+    // Take a look at this cro pfunction
     byte_image = mve::image::crop(view_image, width, height, min_x, min_y, *math::Vec3uc(255, 0, 255));
+    
     mve::FloatImage::Ptr image = mve::image::byte_to_float_image(byte_image);
+    
+    std::string output_name = "/home/ubuntu/Candidates/CANDITATE_" + std::to_string(width) + "_" + std::to_string(height) + ".png";
+    // std::cout << output_name << "\n";
+    
+    mve::image::save_png_file(byte_image, output_name);
+    
+    // image->
 
     if (settings.tone_mapping == TONE_MAPPING_GAMMA) {
         mve::image::gamma_correct(image, 2.2f);
@@ -134,6 +153,10 @@ generate_candidate(int label, TextureView const & texture_view,
     TexturePatchCandidate texture_patch_candidate =
         {Rect<int>(min_x, min_y, max_x, max_y),
             TexturePatch::create(label, faces, texcoords, image)};
+
+    texture_patch_candidate.texture_patch->texcoord_original = tex_coord_originalzzzzz;
+    
+    texture_patch_candidate.texcoord_original = tex_coord_originalzzzzz; 
     return texture_patch_candidate;
 }
 
@@ -464,9 +487,15 @@ generate_texture_patches(UniGraph const & graph, mve::TriangleMesh::ConstPtr mes
     vertex_projection_infos->resize(vertices.size());
 
     std::size_t num_patches = 0;
+    std::set<int> ids_for_tex; 
+
+    // std::ofstream outfile("/home/ubuntu/test.txt");
+
+    int texture_patch_counter = 0;
 
     std::cout << "\tRunning... " << std::flush;
     #pragma omp parallel for schedule(dynamic)
+
     for (std::size_t i = 0; i < texture_views->size(); ++i) {
 
         std::vector<std::vector<std::size_t> > subgraphs;
@@ -511,10 +540,33 @@ generate_texture_patches(UniGraph const & graph, mve::TriangleMesh::ConstPtr mes
         for (; it != candidates.end(); ++it) {
             std::size_t texture_patch_id;
 
+            // ids_for_tex.insert(it->texture_patch->get_label());
+
             #pragma omp critical
             {
+                it->texture_patch->min_x = it->bounding_box.min_x;
+                it->texture_patch->max_x = it->bounding_box.max_x;
+                it->texture_patch->min_y = it->bounding_box.min_y;
+                it->texture_patch->max_y = it->bounding_box.max_y;
+
                 texture_patches->push_back(it->texture_patch);
+
+                std::string output_path = "/home/ubuntu/Candidates/patch_" + std::to_string(texture_patch_counter) + ".png";
+                auto curr_im = it->texture_patch->get_image();
+                auto image_vals = it->texture_patch->get_blending_mask();
+                // auto save_im = mve::image::float_to_byte_image(image_vals);
+                
+                // mve::image::save_png_file(image_vals, output_path);
+
+                texture_patch_counter++;
+
+
+                // ids_for_tex.insert(it->texture_patch->get_label());
                 texture_patch_id = num_patches++;
+                // auto bb = it->bounding_box;
+
+                // outfile << it->texture_patch->get_label() << "," << bb.
+                
             }
 
             std::vector<std::size_t> const & faces = it->texture_patch->get_faces();
@@ -530,10 +582,21 @@ generate_texture_patches(UniGraph const & graph, mve::TriangleMesh::ConstPtr mes
 
                     #pragma omp critical
                     vertex_projection_infos->at(vertex_id).push_back(info);
+                    // std::cout << vertex_id << "\n";
+                    // std::cout << face_id << "\n";
                 }
             }
         }
     }
+
+    std::cout << "---------------------------" << "\n";
+
+    for (auto val: ids_for_tex)
+    {
+        std::cout << val << "\n";
+    }
+
+
 
     merge_vertex_projection_infos(vertex_projection_infos);
 

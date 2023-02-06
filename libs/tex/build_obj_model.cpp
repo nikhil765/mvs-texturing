@@ -32,7 +32,10 @@ build_model(mve::TriangleMesh::ConstPtr mesh,
     ObjModel::Groups & groups = obj_model->get_groups();
     MaterialLib & material_lib = obj_model->get_material_lib();
 
+    std::cout << "-----------" << "\n";
+
     for (TextureAtlas::Ptr texture_atlas : texture_atlases) {
+
 
         Material material;
         const std::size_t n = material_lib.size();

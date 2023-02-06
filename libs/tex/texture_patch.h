@@ -41,6 +41,8 @@ class TexturePatch {
         mve::ByteImage::Ptr blending_mask;
 
     public:
+        std::vector<math::Vec2f> texcoord_original;
+
         /** Constructs a texture patch. */
         TexturePatch(int _label, std::vector<std::size_t> const & _faces,
             std::vector<math::Vec2f>  const & _texcoords, mve::FloatImage::Ptr _image);
@@ -86,6 +88,8 @@ class TexturePatch {
         int get_width(void) const;
         int get_height(void) const;
         int get_size(void) const;
+
+        int min_x; int min_y; int max_x; int max_y;
 };
 
 inline TexturePatch::Ptr
