@@ -21,9 +21,9 @@
 #include "texture_patch.h"
 #include "texture_atlas.h"
 
-#define MAX_TEXTURE_SIZE (8 * 1024)
-#define PREF_TEXTURE_SIZE (4 * 1024)
-#define MIN_TEXTURE_SIZE (256)
+#define MAX_TEXTURE_SIZE 16384
+#define PREF_TEXTURE_SIZE 16384
+#define MIN_TEXTURE_SIZE 16384
 
 TEX_NAMESPACE_BEGIN
 
@@ -35,6 +35,7 @@ TEX_NAMESPACE_BEGIN
 unsigned int
 calculate_texture_size(std::list<TexturePatch::ConstPtr> const & texture_patches) {
     unsigned int size = MAX_TEXTURE_SIZE;
+    return 16384; 
 
     while (true) {
         unsigned int total_area = 0;
